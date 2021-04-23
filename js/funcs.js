@@ -14,11 +14,12 @@ function angleVector(angle)
 {
   return Vector(cos(angle), sin(angle));
 }
-function AngleOfVector(V)
+function AngleOfVector(Vec)
 {
+  let V = Vec.norm 
   let a = acos(V.x);
   if (V.y < 0) a = Math.PI*2 - a;
-  return a;
+  return a ;
 }
 function orient(a,b,c){
     return (a.x - c.x)*(b.y - c.y) - (a.y - c.y) * (b.x - c.x)
