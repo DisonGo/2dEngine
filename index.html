@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -7,10 +8,11 @@
     <link rel="stylesheet" href="css/main.css">
     <title>Engine</title>
 </head>
+
 <body>
-    <!-- <object data="svgs/demo.svg" type="image/svg+xml" /> -->
-    <!-- <iframe src="svgs/demo.svg" frameborder="0"></iframe> -->
-    <div id="mainCan"><div style="position: absolute;">i suck dick</div></div>
+    <div id="mainCan">
+        <div style="position: absolute;"><button href="" id="link">save</button></div>
+    </div>
     <div id="divs"></div>
     <script src="js/Presets/prepare4Game.js"></script>
     <script src="js/Presets/bigFunc.js"></script>
@@ -19,5 +21,25 @@
     <script src="js/classes.js"></script>
     <script src="js/funcs.js"></script>
     <script src="js/main.js"></script>
+    <script>
+        document.getElementById("link").addEventListener("click", saveSvg(svg,"Your"+new Date().getDay()+":"+new Date().getMilliseconds()+".svg"))
+        function saveSvg(svgEl, name) {
+            svgEl.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+            let svgData = svgEl.outerHTML;
+            let preface = '<?xml version="1.0" standalone="no"?>\r\n';
+            let svgBlob = new Blob([preface, svgData], {
+                type: "image/svg+xml;charset=utf-8"
+            });
+            let svgUrl = URL.createObjectURL(svgBlob);
+            let downloadLink = document.createElement("a");
+            downloadLink.href = svgUrl;
+            downloadLink.download = name;
+            document.body.appendChild(downloadLink);
+            downloadLink.click();
+            document.body.removeChild(downloadLink);
+        }
+    </script>
+
 </body>
+
 </html>

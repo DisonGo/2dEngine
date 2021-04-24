@@ -10,8 +10,15 @@ let cPos = {
     x: 0,
     y: 0,
     checkPos: function (e) {
-        let x = e.clientX - e.target.getBoundingClientRect().x
-        let y = e.clientY - e.target.getBoundingClientRect().y
+        let x, y
+        // console.log(arguments);
+        if (typeof arguments[1] === "undefined") {
+            x = e.clientX - e.target.getBoundingClientRect().x
+            y = e.clientY - e.target.getBoundingClientRect().y
+        } else {
+            x = e.clientX - arguments[1].getBoundingClientRect().x
+            y = e.clientY - arguments[1].getBoundingClientRect().y
+        }
         this.x = x
         this.y = y
     }
@@ -26,6 +33,7 @@ let deTwo = new Two(params)
 deTwo.frameCount = 60
 deTwo.appendTo(mainCan)
 let svg = deTwo.renderer.domElement
+svg.id = "svg"
 
 let background = deTwo.makeGroup()
 let topmost = deTwo.makeGroup()
@@ -35,7 +43,9 @@ UI.id = "UI"
 topmost.id = "Top"
 
 let rect = deTwo.makeRoundedRectangle(aWidth / 2, aHeight / 2, 160, 80, 20)
-let star = deTwo.makeStar(centerP.x, centerP.y, 80, 200, 20)
+rect.visible = false
+let star = deTwo.makeStar(centerP.x, centerP.y, 400, 700, 50)
+star.fill = createGradient(deTwo)
 let centerSvg = deTwo.makeCircle(centerP.x, centerP.y, 2)
 let testCirc = deTwo.makeCircle(aWidth / 2 + 10, aHeight / 2, 10)
 background.add(star, testCirc)
@@ -46,25 +56,17 @@ star.ancVec = ancVec
 centerSvg.fill = "black"
 rect.id = "Player"
 rect.stroke = getRandCSSColor()
-let fColor = new Two.Stop(0, getRandCSSColor(), 1)
-let sColor = new Two.Stop(0.5, getRandCSSColor(), 0.8)
-let tColor = new Two.Stop(1, getRandCSSColor(), 1)
-let grad = deTwo.makeLinearGradient(-100,
-    -50,
-    100,
-    50, fColor, sColor, tColor)
-topmost.add(grad)
-rect.fill = grad
+rect.fill = createGradient(deTwo)
 testCirc.p = new Dot(testCirc.translation.x, testCirc.translation.y)
 let rot = 0.1
 
 deTwo.update()
 
-
-
 background.add(createAnchorPntsArr(star))
-
 topmost.add(createAnchorPntsArr(rect))
+rect.anchorPnts.visible = false
+star.anchorPnts.fill = createGradient(deTwo)
+console.log(star.anchorPnts);
 testCirc.tick = function () {
     rotateFrom(centerP, testCirc.p, rot)
     testCirc.translation.x = testCirc.p.x
@@ -81,11 +83,30 @@ star.shotSet = {
         new Dot(star.translation.x + star.outerRadius / 2 + 1, star.translation.y),
         new Dot(star.translation.x + star.outerRadius / 2, star.translation.y))
 }
+star.anchorPnts.last.animating = true
+star.anchorPnts.cur = star.anchorPnts.last
+star.anchorPnts.scaleInc = 0.1
+star.anchorPnts.r = 20
 star.tick = function () {
     star.ancVec.end = new Dot(rect.translation.x, rect.translation.y)
     star.rotation = star.ancVec.angle
     rotateVecFrom(star.ancVec._sysBeg, star.shotSet.anc, star.rotation)
     rotateAnchorPntsArrOf(star)
+    let cur = star.anchorPnts.find((el) => {
+        if (el.animating) return el
+    })
+    if (typeof cur !== "undefined") {
+        if (cur.scale > 3) {
+            cur.scaleInc *= -1
+        }
+        if (cur.scale < 0.1) {
+            console.log(cur.id, cur.next.id);
+            cur.scaleInc *= -1
+            cur.animating = false
+            cur.next.animating = true
+        }
+        cur.scale += cur.scaleInc
+    }
 }
 star.shotParticles = deTwo.makeGroup()
 star.shotParticles.id = "shotPart"
@@ -207,9 +228,11 @@ svg.addEventListener("wheel", function (e) {
         speed = speedFactor + 1
     }
 })
-svg.addEventListener("mousemove", function (e) {cPos.checkPos(e)})
+svg.addEventListener("mousemove", function (e) {
+    cPos.checkPos(e, this)
+})
 svg.addEventListener("click", function (e) {
-    cPos.checkPos(e)
+    cPos.checkPos(e, this)
     vec.additionalAngle += Math.PI / 2
     if (typeof window.lastVec !== "undefined") window.lastVec.removeFrom(UI)
     window.lastVec = vec
