@@ -5,12 +5,113 @@ let params = {
     height: aHeight,
     autostart: true
 }
+
+let cPos = {
+    x: 0,
+    y: 0,
+    checkPos: function (e) {
+        let x = e.clientX - e.target.getBoundingClientRect().x
+        let y = e.clientY - e.target.getBoundingClientRect().y
+        this.x = x
+        this.y = y
+    }
+}
+let centerP = new Dot(aWidth / 2, aHeight / 2)
+
+let vec = new Vector(centerP, new Dot(aWidth / 2, aHeight / 2 + 10), centerP)
+
+let ancVec = new Vector(centerP, vec._pnts.s, centerP)
+
 let deTwo = new Two(params)
 deTwo.frameCount = 60
 deTwo.appendTo(mainCan)
-let rect = deTwo.makeRectangle(aWidth / 2, aHeight / 2, 160, 80, 10)
+let svg = deTwo.renderer.domElement
+
+let background = deTwo.makeGroup()
+let topmost = deTwo.makeGroup()
+let UI = deTwo.makeGroup()
+background.id = "Background"
+UI.id = "UI"
+topmost.id = "Top"
+
+let rect = deTwo.makeRoundedRectangle(aWidth / 2, aHeight / 2, 160, 80, 20)
+let star = deTwo.makeStar(centerP.x, centerP.y, 80, 200, 20)
+let centerSvg = deTwo.makeCircle(centerP.x, centerP.y, 2)
+let testCirc = deTwo.makeCircle(aWidth / 2 + 10, aHeight / 2, 10)
+background.add(star, testCirc)
+UI.add(centerSvg)
+topmost.add(rect)
+star.ancVec = ancVec
+
+centerSvg.fill = "black"
 rect.id = "Player"
-let circ = deTwo.makeCircle(aWidth / 2, aHeight / 2, 10)
+rect.stroke = getRandCSSColor()
+let fColor = new Two.Stop(0, getRandCSSColor(), 1)
+let sColor = new Two.Stop(0.5, getRandCSSColor(), 0.8)
+let tColor = new Two.Stop(1, getRandCSSColor(), 1)
+let grad = deTwo.makeLinearGradient(-100,
+    -50,
+    100,
+    50, fColor, sColor, tColor)
+topmost.add(grad)
+rect.fill = grad
+testCirc.p = new Dot(testCirc.translation.x, testCirc.translation.y)
+let rot = 0.1
+
+deTwo.update()
+
+
+
+background.add(createAnchorPntsArr(star))
+
+topmost.add(createAnchorPntsArr(rect))
+testCirc.tick = function () {
+    rotateFrom(centerP, testCirc.p, rot)
+    testCirc.translation.x = testCirc.p.x
+    testCirc.translation.y = testCirc.p.y
+}
+star.shotSet = {
+    time: 20,
+    speed: 200,
+    width: 15,
+    length: 5,
+    r: 2,
+    color: "red",
+    anc: new Vector(new Dot(star.translation.x + star.outerRadius / 2, star.translation.y),
+        new Dot(star.translation.x + star.outerRadius / 2 + 1, star.translation.y),
+        new Dot(star.translation.x + star.outerRadius / 2, star.translation.y))
+}
+star.tick = function () {
+    star.ancVec.end = new Dot(rect.translation.x, rect.translation.y)
+    star.rotation = star.ancVec.angle
+    rotateVecFrom(star.ancVec._sysBeg, star.shotSet.anc, star.rotation)
+    rotateAnchorPntsArrOf(star)
+}
+star.shotParticles = deTwo.makeGroup()
+star.shotParticles.id = "shotPart"
+
+background.add(star.shotParticles)
+
+star.shotInt = setInterval(() => {
+    let set = star.shotSet
+    let svec = set.anc
+    let pos = star.translation
+    let particle = deTwo.makeRoundedRectangle(svec._pnts.f.x, svec._pnts.f.y, set.width, set.length, set.r)
+    star.shotParticles.add(particle)
+    particle.rotation = star.rotation
+    particle.fill = set.color
+    particle.tick = function () {
+        let part = particle
+        let a = part.rotation
+        let vx = cos(a) * set.speed / frames;
+        let vy = sin(a) * set.speed / frames;
+        part.translation.x += vx
+        part.translation.y += vy
+    }
+    deTwo.bind("update", particle.tick)
+}, star.shotSet.time)
+let frames = 60
+
 rect.tick = function () {
     let angle = vec.angle
     let vx = cos(angle) * speed / frames;
@@ -24,77 +125,80 @@ rect.tick = function () {
     } else {
         rect.moving = false
     }
-    let angleR = rect.rotation
-    let p1 = new Point(0,0)
-    let p2 = new Point(rect._collection[0].x,rect._collection[0].y)
-    let pVec = new Vector( p1,p2)
-    // log(pVec)
-    let x = rect._collection[0].x* cos(angleR) + rect.translation.x 
-    let y = rect._collection[0].y* sin(angleR) + rect.translation.y 
-    circ.translation.x = x
-    circ.translation.y = y
-    // rect.parent._renderer.elem.appendChild(rect._renderer.elem)
+    rotateAnchorPntsArrOf(rect)
 }
-setInterval(() => {
-    // console.log(vec._sysBeg)
-}, 1000);
+
+
 rect.trail = new Two.Utils.Collection()
+rect.trail.maxLength = 5
 rect.spawnTrail = setInterval(function () {
     if (rect.moving) {
         let newPart = deTwo.makeCircle(rect.translation.x, rect.translation.y, rect.width / 10)
         let fColor = new Two.Stop(0, getRandCSSColor(), 1)
         let sColor = new Two.Stop(0.5, getRandCSSColor(), 0.7)
         let tColor = new Two.Stop(1, getRandCSSColor(), 1)
-        newPart.fill = deTwo.makeLinearGradient(-100,
-            -50,
-            100,
-            50, fColor, sColor, tColor)
+        let grad = deTwo.makeLinearGradient(-10,
+            -5,
+            10,
+            5, fColor, sColor, tColor)
+        newPart.fill = grad
+        newPart.grad = grad
         newPart.noStroke()
+        newPart.up = true
+        newPart.scaleInc = 0.02
+        newPart.deleting = false
+        deTwo.bind("update", function (frameCount) {
+            if (!newPart.deleting) {
+                if (newPart.scale > 2) {
+                    newPart.scaleInc *= -1
+                }
+                if (newPart.scale < 1) {
+                    newPart.scaleInc *= -1
+                }
+                newPart.scale += newPart.scaleInc
+            }
+        })
         rect.trail.push(newPart)
+        background.add(newPart)
+        if (rect.trail.length > rect.trail.maxLength) {
+            let elem = rect.trail.shift()
+            elem.deleting = true
+            deTwo.bind("update", function (fc) {
+                elem.scale -= Math.abs(elem.scaleInc)
+                if (elem.scale < 0) {
+                    deTwo.remove(elem.grad)
+                    background.remove(elem)
+                }
+            })
+        }
     }
-    
-    // console.log(new Point(x,y), angle) 
 }, 100)
-circ.fill = "black"
-rect.stroke = getRandCSSColor()
-let fColor = new Two.Stop(0, getRandCSSColor(), 1)
-let sColor = new Two.Stop(0.5, getRandCSSColor(), 0.8)
-let tColor = new Two.Stop(1, getRandCSSColor(), 1)
-let grad = deTwo.makeLinearGradient(-100,
-    -50,
-    100,
-    50, fColor, sColor, tColor)
-rect.fill = grad
-let svg = deTwo.renderer.domElement
-svg.addEventListener("mousemove", function (e) {
-    let x = e.clientX - this.getBoundingClientRect().x
-    let y = e.clientY - this.getBoundingClientRect().y
-    cPos.x = x
-    cPos.y = y
-})
-let vec = new Vector(new Point(aWidth / 2, aHeight / 2), new Point(aWidth / 2, aHeight / 2+10), new Point(aWidth / 2, aHeight / 2))
-let cPos = {
-    x: 0,
-    y: 0
-}
-// rect.rotation = AngleOfVector(vec)
+clearInterval(star.shotInt)
 
 function changeAnchorAngle() {
-    vec.end = new Point(cPos.x, cPos.y)
+    vec.end = new Dot(cPos.x, cPos.y)
     let angle = vec.angle
     rect.rotation = angle
 }
+
+function checkOut() {
+
+}
 let speedFactor = 10
 let speed = 20
-let frames = 60
+
 deTwo.update()
-deTwo.bind("update",rect.tick)
+
+deTwo.bind("update", rect.tick)
+deTwo.bind("update", testCirc.tick)
+deTwo.bind("update", star.tick)
+
 svg.addEventListener("mousemove", changeAnchorAngle)
 svg.addEventListener("wheel", function (e) {
-    let delta = (e.deltaY) / 100 + 1
-    console.log(delta)
+    let delta = (e.deltaY)
+    // console.log(delta)
     if (speed > speedFactor) {
-        if (!delta) {
+        if (delta < 0) {
             speed += speedFactor - 1
         } else [
             speed -= speedFactor - 1
@@ -103,6 +207,14 @@ svg.addEventListener("wheel", function (e) {
         speed = speedFactor + 1
     }
 })
-rect._renderer.elem.addEventListener("click",function(){
-    vec.additionalAngle += Math.PI/2
+svg.addEventListener("mousemove", function (e) {cPos.checkPos(e)})
+svg.addEventListener("click", function (e) {
+    cPos.checkPos(e)
+    vec.additionalAngle += Math.PI / 2
+    if (typeof window.lastVec !== "undefined") window.lastVec.removeFrom(UI)
+    window.lastVec = vec
+    vec.createOn(deTwo, {
+        show: true,
+        group: UI
+    })
 })
