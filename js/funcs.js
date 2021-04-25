@@ -1,4 +1,51 @@
 // const Two = require("./Presets/two.js")
+let defineSetts = ["scaleInc",
+  "fill",
+  "stroke",
+  "radius",
+  "visible",
+  "animating"
+]
+let transSetts = ["x", "y"]
+
+defineSetts.forEach(function(key){
+  Object.defineProperty(Two.Utils.Collection.prototype, ["_" + key], {
+    value: Number(0),
+    writable: true,
+    configurable: true,
+    enumerable: false
+  })
+  Object.defineProperty(Two.Utils.Collection.prototype, key, {
+    set: function (x) {
+      this.forEach((el) => {
+        el[key] = x
+      })
+      this["_" + key] = x
+    },
+    get: function () {
+      return this["_" + key]
+    }
+  })
+})
+transSetts.forEach(function(key){
+  Object.defineProperty(Two.Utils.Collection.prototype, ["_" + key], {
+    value: Number(0),
+    writable: true,
+    configurable: true,
+    enumerable: false
+  })
+  Object.defineProperty(Two.Utils.Collection.prototype, key, {
+    set: function (x) {
+      this.forEach((el) => {
+        el.translation[key] = x
+      })
+      this["_" + key] = x
+    },
+    get: function () {
+      return this["_" + key]
+    }
+  })
+})
 
 function rotate(dot, angle) {
   let x = dot.x * cos(angle) - dot.y * sin(angle)
@@ -12,15 +59,16 @@ function rotateFrom(beg, dot, angle) {
   let y = beg.y + (dot.y - beg.y) * cos(angle) + (dot.x - beg.x) * sin(angle)
   dot.x = x
   dot.y = y
+  return dot
 }
 
 function rotateVecFrom(beg, v, angle) {
-  let p1 = v._protAtr.pnts.f
-  let p2 = v._protAtr.pnts.s
-  let p3 = v._protAtr.sysBeg
+  let p1 = v.pf,
+      p2 = v.ps,
+      p3 = new Dot().clone(v._sysBeg) 
   rotateFrom(beg, p3, angle)
-  rotateFrom(p3, p1, angle)
-  rotateFrom(p3, p2, angle)
+  rotateFrom(beg, p1, angle)
+  rotateFrom(beg, p2, angle)
   let nv = new Vector(p1, p2, p3)
   v.clone(nv)
 }
@@ -43,48 +91,6 @@ function orient(a, b, c) {
 function createAnchorPntsArr(element) {
   element.anchorPnts = new Two.Utils.Collection()
   let ancArr = element.anchorPnts
-  Object.defineProperty(ancArr, "scaleInc", {
-    set: function (x) {
-      this.forEach((el) => {
-        el.scaleInc = x
-      })
-    }
-  })
-  Object.defineProperty(ancArr, "fill", {
-    set: function (x) {
-      this.forEach((el) => {
-        el.fill = x
-      })
-    }
-  })
-  Object.defineProperty(ancArr, "stroke", {
-    set: function (x) {
-      this.forEach((el) => {
-        el.stroke = x
-      })
-    }
-  })
-  Object.defineProperty(ancArr, "r", {
-    set: function (x) {
-      this.forEach((el) => {
-        el.radius = x
-      })
-    }
-  })
-  Object.defineProperty(ancArr, "visible", {
-    set: function (x) {
-      this.forEach((el) => {
-        el.visible = x
-      })
-    }
-  })
-  Object.defineProperty(ancArr, "animating", {
-    set: function (x) {
-      this.forEach((el) => {
-        el.animating = x
-      })
-    }
-  })
   for (let i = 0; i < element._collection.length; i++) {
     let arr = element._collection
     let elem = arr[i]
@@ -108,7 +114,7 @@ function createAnchorPntsArr(element) {
   ancArr.last = ancArr[ancArr.length - 1]
 
   ancArr.last.next = ancArr.first
-
+  console.log(ancArr)
   return ancArr
 }
 

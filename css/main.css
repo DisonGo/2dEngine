@@ -1,3 +1,12 @@
 body{
     margin: 0;
 }
+#statusDiv{
+    position: absolute;
+    right: 0;
+    top: 0;
+    text-align: left;
+    border: 1px dashed cyan;
+    border-radius: 3px;
+    max-width: 300px;
+}

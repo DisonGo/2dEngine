@@ -11,7 +11,8 @@
 
 <body>
     <div id="mainCan">
-        <div style="position: absolute;"><button href="" id="link">save</button></div>
+        <!-- <div style="position: absolute;"><button href="" id="link">save</button></div> -->
+        <p id="statusDiv">None</p>
     </div>
     <div id="divs"></div>
     <script src="js/Presets/prepare4Game.js"></script>
@@ -22,22 +23,22 @@
     <script src="js/funcs.js"></script>
     <script src="js/main.js"></script>
     <script>
-        document.getElementById("link").addEventListener("click", saveSvg(svg,"Your"+new Date().getDay()+":"+new Date().getMilliseconds()+".svg"))
-        function saveSvg(svgEl, name) {
-            svgEl.setAttribute("xmlns", "http://www.w3.org/2000/svg");
-            let svgData = svgEl.outerHTML;
-            let preface = '<?xml version="1.0" standalone="no"?>\r\n';
-            let svgBlob = new Blob([preface, svgData], {
-                type: "image/svg+xml;charset=utf-8"
-            });
-            let svgUrl = URL.createObjectURL(svgBlob);
-            let downloadLink = document.createElement("a");
-            downloadLink.href = svgUrl;
-            downloadLink.download = name;
-            document.body.appendChild(downloadLink);
-            downloadLink.click();
-            document.body.removeChild(downloadLink);
-        }
+        // document.getElementById("link").addEventListener("click", saveSvg(svg,"Your"+new Date().getDay()+":"+new Date().getMilliseconds()+".svg"))
+        // function saveSvg(svgEl, name) {
+        //     svgEl.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+        //     let svgData = svgEl.outerHTML;
+        //     let preface = '<?xml version="1.0" standalone="no"?>\r\n';
+        //     let svgBlob = new Blob([preface, svgData], {
+        //         type: "image/svg+xml;charset=utf-8"
+        //     });
+        //     let svgUrl = URL.createObjectURL(svgBlob);
+        //     let downloadLink = document.createElement("a");
+        //     downloadLink.href = svgUrl;
+        //     downloadLink.download = name;
+        //     document.body.appendChild(downloadLink);
+        //     downloadLink.click();
+        //     document.body.removeChild(downloadLink);
+        // }
     </script>
 
 </body>
