@@ -23,8 +23,8 @@ cPos.checkPos = function (e) {
 let centerP = new Dot(aWidth / 2, aHeight / 2),
     vec = new Vector(centerP, new Dot(aWidth / 2, aHeight / 2 + 10), centerP),
     ancVec = new Vector().clone(vec),
-    testRotVec = new Vector(new Dot(aWidth / 2 + 100, aHeight / 2 + 100), new Dot(aWidth / 2 + 20, aHeight / 2 + 10), new Dot(aWidth / 2 - 20, aHeight / 2 - 10))
-deTwo = new Two(params)
+    testRotVec = new Vector(new Dot(aWidth / 2 + 100, aHeight / 2 + 100), new Dot(aWidth / 2 + 20, aHeight / 2 + 10), new Dot(aWidth / 2 - 20, aHeight / 2 - 10)),
+    deTwo = new Two(params)
 
 // vec.sysBegChangble = false 
 
