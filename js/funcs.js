@@ -66,11 +66,9 @@ function rotateVecFrom(beg, v, angle) {
   let p1 = v.pf,
       p2 = v.ps,
       p3 = new Dot().clone(v._sysBeg) 
-  rotateFrom(beg, p3, angle)
   rotateFrom(beg, p1, angle)
   rotateFrom(beg, p2, angle)
-  let nv = new Vector(p1, p2, p3)
-  v.clone(nv)
+  v.clone( new Vector(p1, p2, p3))
 }
 
 function angleVector(angle) {

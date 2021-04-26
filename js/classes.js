@@ -21,6 +21,16 @@ class Point {
     sumY(value) {
         this._y += value
     }
+    sumPoint(p) {
+        this._x += p.x
+        this._y += p.y
+        return this
+    }
+    substrPoint(p) {
+        this._x -= p.x
+        this._y -= p.y
+        return this
+    }
 }
 class Dot extends Point {
     constructor(x, y) {
@@ -37,16 +47,6 @@ class Dot extends Point {
         this._x = p.x
         this._y = p.y
         this._next = p.next
-        return this
-    }
-    sumPoint(p) {
-        this._x += p.x
-        this._y += p.y
-        return this
-    }
-    substrPoint(p) {
-        this._x -= p.x
-        this._y -= p.y
         return this
     }
 }
@@ -214,7 +214,7 @@ class Vector {
     createOn(ctx) {
         let pf = this.pf,
             ps = this.ps,
-            a1 = new Two.Anchor(pf.x, pf.y, 0, 0, 0, 0, Two.Commands.move),
+            a1 = new Two.Anchor(0, 0, 0, 0, 0, 0, Two.Commands.move),
             a2 = new Two.Anchor(ps.x, ps.y, 0, 0, 0, 0, Two.Commands.close),
             anchors = [a1, a2],
             p1 = new Dot(this._sysBeg.x, this._sysBeg.y)
@@ -244,15 +244,15 @@ class Vector {
                 break
             case 1:
                 this.beg = pos
-                this.elem._collection[0].x = elem.translation.x - this._sysBeg.x
-                this.elem._collection[0].y = elem.translation.y - this._sysBeg.y
                 this.elem.translation.x = pos.x
                 this.elem.translation.y = pos.y
+                this.elem._collection[0].x = 0 
+                this.elem._collection[0].y = 0
                 break
             case 2:
                 this.end = pos
-                this.elem._collection[1].x = elem.translation.x - this._sysBeg.x
-                this.elem._collection[1].y = elem.translation.y - this._sysBeg.y
+                this.elem._collection[1].x = this.x
+                this.elem._collection[1].y = -this.y
                 break
         }
     }
