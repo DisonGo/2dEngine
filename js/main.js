@@ -256,9 +256,7 @@ deTwo.bind("update", rect.tick)
 deTwo.bind("update", testCirc.tick)
 deTwo.bind("update", star.tick)
 deTwo.bind("update", testRotVec.tick)
-deTwo.bind("update", (frameCount) => {
-    statusBox.update(statusBox.target)
-})
+deTwo.bind("update", statusBox.update)
 svg.addEventListener("mousemove", changeAnchorAngle)
 svg.addEventListener("wheel", function (e) {
     let delta = (e.deltaY)
@@ -275,7 +273,8 @@ svg.addEventListener("wheel", function (e) {
 svg.addEventListener("mousemove", function (e) {
     cPos.checkPos(e, this)
 })
-statusBox.update = function (vectr) {
+statusBox.update = function () {
+    let vectr = statusBox.target
     let obj = {
         first: `x:\t${Math.round(vectr._pnts.f.x)} \ty:\t${Math.round(vectr._pnts.f.y)}`,
         second: `x:\t${Math.round(vectr._pnts.s.x)} \ty:\t${Math.round(vectr._pnts.s.y)}`,
