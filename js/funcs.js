@@ -8,7 +8,7 @@ let defineSetts = ["scaleInc",
 ]
 let transSetts = ["x", "y"]
 
-defineSetts.forEach(function (key) {
+defineSetts.forEach(function(key){
   Object.defineProperty(Two.Utils.Collection.prototype, ["_" + key], {
     value: Number(0),
     writable: true,
@@ -27,7 +27,7 @@ defineSetts.forEach(function (key) {
     }
   })
 })
-transSetts.forEach(function (key) {
+transSetts.forEach(function(key){
   Object.defineProperty(Two.Utils.Collection.prototype, ["_" + key], {
     value: Number(0),
     writable: true,
@@ -64,11 +64,11 @@ function rotateFrom(beg, dot, angle) {
 
 function rotateVecFrom(beg, v, angle) {
   let p1 = v.pf,
-    p2 = v.ps,
-    p3 = new Dot().clone(v._sysBeg)
+      p2 = v.ps,
+      p3 = new Dot().clone(v._sysBeg) 
+  rotateFrom(beg, p3, angle)
   rotateFrom(beg, p1, angle)
   rotateFrom(beg, p2, angle)
-  rotateFrom(beg, p3, angle)
   let nv = new Vector(p1, p2, p3)
   v.clone(nv)
 }
@@ -101,7 +101,9 @@ function createAnchorPntsArr(element) {
     ancArr[i].p = nP
     ancArr[i].animating = false
     ancArr[i].scaleInc = 0.1
-    ancArr[i].baseC = new Dot(elem.x, elem.y)
+    ancArr[i].baseC = new Dot(0, 0)
+    ancArr[i].baseC.x = elem.x
+    ancArr[i].baseC.y = elem.y
   }
 
   for (let i = 0; i < ancArr.length - 1; i++) {
