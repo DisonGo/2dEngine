@@ -8,7 +8,7 @@ let defineSetts = ["scaleInc",
 ]
 let transSetts = ["x", "y"]
 
-defineSetts.forEach(function(key){
+defineSetts.forEach(function (key) {
   Object.defineProperty(Two.Utils.Collection.prototype, ["_" + key], {
     value: Number(0),
     writable: true,
@@ -27,7 +27,7 @@ defineSetts.forEach(function(key){
     }
   })
 })
-transSetts.forEach(function(key){
+transSetts.forEach(function (key) {
   Object.defineProperty(Two.Utils.Collection.prototype, ["_" + key], {
     value: Number(0),
     writable: true,
@@ -64,11 +64,11 @@ function rotateFrom(beg, dot, angle) {
 
 function rotateVecFrom(beg, v, angle) {
   let p1 = v.pf,
-      p2 = v.ps,
-      p3 = new Dot().clone(v._sysBeg) 
+    p2 = v.ps
+    // p3 = new Dot().clone(v._sysBeg)
   rotateFrom(beg, p1, angle)
   rotateFrom(beg, p2, angle)
-  v.clone( new Vector(p1, p2, p3))
+  v.clone(new Vector(p1, p2))
 }
 
 function angleVector(angle) {
@@ -85,7 +85,12 @@ function AngleOfVector(Vec) {
 function orient(a, b, c) {
   return (a.x - c.x) * (b.y - c.y) - (a.y - c.y) * (b.x - c.x)
 }
-
+function distanceToLine(line,c){
+  let dx = line.x,
+      dy = line.y,
+      D = dx * (c.y - line.pf.y) - dy * (c.x - line.pf.x)
+      return Math.abs(D/Math.hypot(dx,dy))
+}
 function createAnchorPntsArr(element) {
   element.anchorPnts = new Two.Utils.Collection()
   let ancArr = element.anchorPnts
@@ -116,6 +121,16 @@ function createAnchorPntsArr(element) {
   return ancArr
 }
 
+function createCircLinkArr(arr) {
+  arr.first = arr[0]
+  arr.last = arr[arr.length - 1]
+  arr.last.next = arr.first
+  for (let i = 0; arr[i] != arr.last; i++) {
+    arr[i].next = arr[i + 1]
+  }
+  return arr
+}
+
 function rotateAnchorPntsArrOf(element) {
   let angleR = element.rotation
   let base = new Dot(element.translation.x, element.translation.y)
@@ -143,4 +158,7 @@ function createGradient(ctx) {
     100,
     50, fColor, sColor, tColor)
   return grad
+}
+function dotProduct(p1,p2){
+  return(p1.x*p2.x)+(p1.y*p2.y)
 }
