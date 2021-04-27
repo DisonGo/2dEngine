@@ -169,6 +169,7 @@ class Polygon {
                 show: true,
                 group: UI
             })
+            axis.elem.stroke = "red"
         })
         this._axisArr.forEach(el => {
             let norm = el.norm
@@ -180,18 +181,19 @@ class Polygon {
                 let dot = this._vecArr[i] 
                 let vecP = new Dot(dot.x,dot.y)
                 let dotP = dotProduct(axP, vecP)
-                let lengths = dot.length * el.length
-                let angle = acos(dotP/lengths)
-                dotP = dot.length * cos(angle)
-                pmax = Math.max(pmax, dotP)
-                pmin = Math.min(pmin, dotP)
-                el.arranged.push(dotP)
-                let vec = new Vector(new Dot(el.pf.x,el.pf.y),new Dot(el.pf.x + dotP,el.ps.y))
-                rotateVecFrom(vec.pf,vec,el.angle)
-                vec.createOn(deTwo, {
-                    show: true,
-                    group: UI
-                })
+                if(Math.abs(dotP)>0.001){
+                    let lengths = dot.length * el.length
+                    dotP = dot.length * cos(dotP/lengths)
+                    pmax = Math.max(pmax, dotP)
+                    pmin = Math.min(pmin, dotP)
+                    el.arranged.push(dotP)
+                    let vec = new Vector(new Dot(el.pf.x,el.pf.y),new Dot(el.pf.x + dotP,el.pf.y)) 
+                    rotateVecFrom(vec.pf,vec,el.angle)
+                    vec.createOn(deTwo, {
+                        show: true,
+                        group: UI
+                    })
+                }
             }
             el.arranged.max = pmax
             el.arranged.min = pmin

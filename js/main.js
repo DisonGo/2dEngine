@@ -333,7 +333,7 @@ statusBox.update = function (frameCount) {
 
 let testRect = deTwo.makeRectangle()
 let polys = []
-let sides = 3
+let sides = 20
 
 let quan = 1
 for(let i= 0;i<quan;i++){
