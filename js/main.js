@@ -12,10 +12,10 @@ cPos.checkPos = function (e) {
     // console.log(arguments);
     if (typeof arguments[1] === "undefined") {
         x = e.clientX - e.target.getBoundingClientRect().x
-        y = e.clientY - e.target.getBoundingClientRect().y
+        y = aHeight - e.clientY - e.target.getBoundingClientRect().y
     } else {
         x = e.clientX - arguments[1].getBoundingClientRect().x
-        y = e.clientY - arguments[1].getBoundingClientRect().y
+        y = aHeight - e.clientY - arguments[1].getBoundingClientRect().y
     }
     this.x = x
     this.y = y
@@ -168,7 +168,7 @@ function testPlace() {
         })
 
     } //stars
-    let frames = 60 
+    let frames = 60
     //
     {
         rect.tick = function (frameCount) {
@@ -298,14 +298,39 @@ svg.addEventListener("wheel", function (e) {
         speed = speedFactor + 1
     }
 })
+svg.addEventListener("mousedown", function (e) {
+    svg.mousedown = true
+})
+svg.addEventListener("mouseup", function (e) {
+    svg.mousedown = false
+})
 svg.addEventListener("mousemove", function (e) {
     cPos.checkPos(e, this)
+    checkDraggers()
 }) // console.log(this.innerHTML);
 svg.addEventListener("click", function (e) {
     cPos.checkPos(e, this)
-    vec.additionalAngle += Math.PI / 2
+    // vec.additionalAngle += Math.PI / 2
 })
-
+let draggerArr = []
+let randRadius = 100
+function checkDraggers(){
+    draggerArr.forEach(el=>{
+        if(el.mousedown) {
+            polys.forEach(poly=>{
+                if(el.parent != poly){
+                    if(!el.parent.SATCollision(poly))
+                    {
+                        el.parent.moveTo(cPos)
+                    }else {
+                        el.parent.moveTo(cPos.sumPoint(new Point(getRandom(-randRadius,randRadius),(getRandom(-randRadius,randRadius)))))
+                        el.mousedown = false
+                    }
+                }
+            })
+        }
+    })
+}
 let statusBox = document.getElementById("statusDiv")
 
 function setStatusTarget(targ) {
@@ -330,23 +355,38 @@ statusBox.update = function (frameCount) {
     // console.log(this.innerHTML);
 }
 // testPlace()
+// let quan = 2
 
-let testRect = deTwo.makeRectangle()
+// let testRect = deTwo.makeRectangle()
 let polys = []
-let sides = 20
+let sides = 3
 
-let quan = 1
-for(let i= 0;i<quan;i++){
-    let pnts = []
-    for(let i= 0;i<sides;i++){
-        let x = getRandom(100,1000)
-        let y = getRandom(200,700)
-        pnts.push(new Dot(x,y))
-    }
-    let center = new Point(aWidth,aHeight)
-    let poly = new Polygon(pnts,centerP) 
-    poly.createOn(deTwo,{show:true,group:UI})
-    polys.push(poly)
-    poly.SATCollision(pnts)
-}
+let pnts1 = []
+let pnts2 = []
+// let x = getRandom(100, 1000)
+// let y = getRandom(200, 700)
+let inc = 150
+pnts1.push(new Dot(100, 100))
+pnts1.push(new Dot(200, 100))
+pnts1.push(new Dot(170, 180))
+pnts2.push(new Dot(inc-110, inc ).sumPoint(pnts1[0]))
+pnts2.push(new Dot(inc+50, inc).sumPoint(pnts1[1]))
+pnts2.push(new Dot(inc, inc+50).sumPoint(pnts1[2]))
+let center = new Point(aWidth, aHeight)
+let poly1 = new Polygon(pnts1, center)
+let poly2 = new Polygon(pnts2, center)
+    poly1.createOn(deTwo, {
+        show: true,
+        group: UI
+    })
+    poly2.createOn(deTwo, {
+        show: true,
+        group: UI
+    })
+draggerArr.push(poly1.setDrag(),poly2.setDrag()) 
+polys.push(poly1,poly2)
+console.log("Collision "+polys[0].SATCollision(polys[1])); 
+log(poly1.calcBox())
+// for (let i = 0; i < quan; i++) {
+// }
 // console.log(poly.lines,poly.points);

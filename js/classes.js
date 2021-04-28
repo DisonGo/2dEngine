@@ -17,12 +17,6 @@ class Point {
     set y(value) {
         this._y = value
     }
-    sumX(value) {
-        this._x += value
-    }
-    sumY(value) {
-        this._y += value
-    }
     sumPoint(p) {
         this._x += p.x
         this._y += p.y
@@ -70,8 +64,34 @@ class Dot extends Point {
         this._next = p._next
         return this
     }
+    get created() {
+        return typeof this.elem !== "undefined"
+    }
+    move(x, y) {
+        this.x += x
+        this.y += y
+        if (this.created) {
+            this.elem.translation.x += x
+            this.elem.translation.y += y
+        }
+    }
+    moveTo(p) {
+        this._x = p.x
+        this._y = p.y
+        if (this.created) {
+            this.elem.translation.x = p.x
+            this.elem.translation.y = p.y
+        }
+    }
+    set fill(color) {
+        if (this.created) this.elem.fill = color
+    }
+    get fill() {
+        if (this.created) return this.elem.fill
+        return false
+    }
     createOn(ctx) {
-        this.elem = ctx.makeCircle(this.x, this.y, 10)
+        this.elem = ctx.makeCircle(this._x, this._y, 10)
         if (arguments.length < 2) return this.elem
         if (arguments[1].show == true) this.showOn(arguments[1].group)
         return this.elem
@@ -114,6 +134,43 @@ class Line {
         this.calcV()
         this.length
     }
+    get middle() {
+        return new Point(this.pf.x + (this.ps.x - this.pf.x) / 2, this.pf.y + (this.ps.y - this.pf.y) / 2)
+    }
+    get created() {
+        return typeof this.elem !== "undefined"
+    }
+    move(x, y) {
+        this.pf.x += x
+        this.pf.y += y
+        this.ps.x += x
+        this.ps.y += y
+        if (this.created) {
+            this.elem.translation.x += x
+            this.elem.translation.y += y
+        }
+        this.length
+    }
+    moveTo(p) {
+        let pm = this.middle
+        let dif = new Point().clone(p).substrPoint(pm)
+        this.pf.x += dif.x
+        this.pf.y += dif.y
+        this.ps.x += dif.x
+        this.ps.y += dif.y
+        if (this.created) {
+            this.elem.translation.x = p.x
+            this.elem.translation.y = p.y
+        }
+        this.length
+    }
+    set fill(color) {
+        if (this.created) this.elem.fill = color
+    }
+    get fill() {
+        if (this.created) return this.elem.fill
+        return false
+    }
     createOn(ctx) {
         // let x1 = this.pf.x
         //     let x2 = 
@@ -131,20 +188,55 @@ class Line {
     }
 }
 class Polygon {
-    constructor(pnts, middle) {
-        this._pm = new Point().clone(middle)
+    constructor(pnts) {
         this._ancrsCollection = []
         this._lineCollection = []
         this._vecArr = []
+        this._axisArr = []
         this._elemCollection = new Two.Utils.Collection()
         for (let el of pnts) {
             this._ancrsCollection.push(new Dot().clone(el))
         }
-        createCircLinkArr(this._ancrsCollection)
         for (let el of this._ancrsCollection) {
+        }
+        createCircLinkArr(this._ancrsCollection)
+        this._ancrsCollection.forEach(el => {
             this._lineCollection.push(new Line(el, el.next))
             this._vecArr.push(new Vector(el, el.next))
+            let axis = new Vector(  new Dot(el.x, el.y),
+            new Dot(el.next.x, el.next.y))
+            rotateVecFrom(el, axis, Math.PI / 2)
+            this._axisArr.push(axis)
+        })
+        this.middle = this.calcBox().mid
+        this.middle.createOn(deTwo,{show:1,group:UI})
+        this.middle.parent = this
+        this.middle.elem.parent = this
+        this.middle.elem.radius = 20
+        deTwo.update()
+        console.log(this.middle);
+        this.middle._pVecs = []
+        this.middle._lVecs = []
+        for (let el of this._ancrsCollection) {
+            let v =new Vector(this.middle,el)
+            this.middle._pVecs.push(v)
+            v.createOn(deTwo,{show:1,group:UI})
         }
+        for (let el of this._lineCollection) {
+            let v =new Vector(this.middle,el.middle)
+            this.middle._lVecs.push(v)
+            v.createOn(deTwo,{show:1,group:UI})
+        }
+    }
+    setDrag(svg){
+        let poly = this
+        this.middle.elem._renderer.elem.addEventListener("mousedown",function(){
+            poly.middle.elem.mousedown = true
+        })
+        this.middle.elem._renderer.elem.addEventListener("mouseup",function(){
+            poly.middle.elem.mousedown = false
+        })
+        return poly.middle.elem
     }
     get lines() {
         return this._lineCollection
@@ -155,54 +247,133 @@ class Polygon {
     getPointCord(p) {
         return new Dot()
     }
-    SATCollision(poly) {
-        let res
-        this._axisArr = []
+    calcAnch(){
+    }
+    move(x,y){
+        console.log(x,y);
         this._ancrsCollection.forEach(el => {
-            let axis = new Vector(new Dot(el.x, (el.y)),
-                new Dot(el.next.x, (el.next.y)))
-            rotateVecFrom(el, axis, Math.PI / 2)
-            // let norm = axis.norm
-            this._axisArr.push(axis)
-            // norm.createOn(deTwo,{show:true,group:UI})
-            axis.createOn(deTwo, {
-                show: true,
-                group: UI
-            })
-            axis.elem.stroke = "red"
+            el.move(x,y)
         })
-        this._axisArr.forEach(el => {
-            let norm = el.norm
-            let axP = new Dot(el.x,el.y)
-            let pmin = 999999999
-            let pmax = -999999999
-            el.arranged = []
-            for (let i = 0;i<this._vecArr.length;i++){
-                let dot = this._vecArr[i] 
-                let vecP = new Dot(dot.x,dot.y)
-                let dotP = dotProduct(axP, vecP)
-                if(Math.abs(dotP)>0.001){
-                    let lengths = dot.length * el.length
-                    dotP = dot.length * cos(dotP/lengths)
-                    pmax = Math.max(pmax, dotP)
-                    pmin = Math.min(pmin, dotP)
-                    el.arranged.push(dotP)
-                    let vec = new Vector(new Dot(el.pf.x,el.pf.y),new Dot(el.pf.x + dotP,el.pf.y)) 
-                    rotateVecFrom(vec.pf,vec,el.angle)
-                    vec.createOn(deTwo, {
-                        show: true,
-                        group: UI
-                    })
-                }
-            }
-            el.arranged.max = pmax
-            el.arranged.min = pmin
-            console.log(el.arranged);
+        this._lineCollection.forEach((el ,i,arr)=> {
+            let dot = new Dot()
+            el.move(x +this.middle._lVecs[i],y)
+        })
+        this._vecArr.forEach(el => {
+            el.move(x,y)
+        })
+        this.middle._pVecs.forEach(el => {
+            el.move(x,y)
+        })
+        this.middle._lVecs.forEach(el => {
+            el.move(x,y)
+        })
+    }
+    moveTo(p){
+        this.middle.moveTo(p)
+        // this.move(dif.x,dif.y)
+        this._ancrsCollection.forEach((el,i) => {
+            let vx = this.middle._pVecs[i].x
+            let vy = this.middle._pVecs[i].y
+            let dot = new Dot(p.x + vx,p.y + vy)
+            this._vecArr[i].moveTo(dot)
+            this.middle._pVecs[i].moveTo(dot)    
+            el.moveTo(dot)
+        })
+        this._lineCollection.forEach((el,i)=> {
+            let vx = this.middle._lVecs[i].x
+            let vy = this.middle._lVecs[i].y
+            let dot = new Dot(p.x + vx,p.y + vy)
+            this.middle._lVecs[i].moveTo(dot)    
+            el.moveTo(dot)
+        })
+    }
+    calcBox() {
+        let cordsx1 = [],
+            cordsy1 = []
+        for (let elem of this._ancrsCollection) {
+            cordsx1.push(elem.x)
+            cordsy1.push(elem.y)
+        }
+        function sor(a, b) {
+            return a - b
+        }
+        let x1 = (cordsx1.sort(sor))[0],
+            y1 = (cordsy1.sort(sor))[0],
+            x2 = cordsx1[cordsx1.length - 1],
+            y2 = cordsy1[cordsy1.length - 1]
+        let box = {
+            pf: new Dot(x1, y1),
+            ps: new Dot(x2, y2),
+            mid: new Dot( x1 + (x2 - x1) / 2,
+                            y1 + (y2 - y1) / 2)
 
-        })
-        
-        for (let el of this._ancrsCollection) {}
-        return res
+        }
+        return box
+    }
+    SATCollision(poly) {
+        const polys = [this, poly]
+        let collision = false
+        polys.forEach(polygon => {
+            polygon._axisArr.forEach(el => {
+                function getProjectPoints(vectors) {
+                    el.arranged = []
+                    let pmin = Number.MAX_VALUE
+                    let pmax = Number.MIN_SAFE_INTEGER
+                    Object.defineProperty(el.arranged, "max", {
+                        value: pmax,
+                        enumerable: false,
+                        writable: true
+                    })
+                    Object.defineProperty(el.arranged, "min", {
+                        value: pmin,
+                        enumerable: false,
+                        writable: true
+                    })
+                    for (let i = 0; i < vectors.length; i++) {
+                        let dot = vectors[i]
+                        let p1 = new Dot().clone(el.beg),
+                            v1 = new Vector().clone(dot),
+                            dot1
+                        if (p1 != v1.beg) {
+                            let subV = new Vector(p1, v1.beg)
+                            dot1 = dotProduct(el.norm, subV)
+                        } else {
+                            dot1 = 0
+                        }
+                        el.arranged.push(dot1)
+                        let projectedDot = new Dot(dot1, 0).sumPoint(p1)
+                        rotateFrom(p1, projectedDot, el.angle)
+                        pmin = Math.min(pmin, dot1)
+                        pmax = Math.max(pmax, dot1)
+                        // projectedDot.createOn(deTwo, {
+                        //     show: true,
+                        //     group: UI
+                        // })
+                        // projectedDot.elem.fill = "blue"
+                        // projectedDot.elem.radius = 5
+                    }
+                    el.arranged = el.arranged.filter(el => {
+                        return Math.abs(el) > 0.0001
+                    })
+                    el.arranged.max = pmax
+                    el.arranged.min = pmin
+                    return el.arranged
+                }
+                const firstPoints = getProjectPoints(polys[0]._vecArr)
+                const secondPoints = getProjectPoints(polys[1]._vecArr)
+                el.pointsPair = [firstPoints, secondPoints]
+                // console.log(el.pointsPair);
+                if ((el.pointsPair[0].min - el.pointsPair[1].max > 0) || (el.pointsPair[1].min - el.pointsPair[0].max > 0)) {
+                    el.gapCheck = true
+                } else el.gapCheck = false
+                // console.log(el.firstCheck);
+            })
+
+            collision = polygon._axisArr.every((el) => {
+                return !el.gapCheck
+            })
+         })
+        return collision
     }
     createOn(ctx) {
         for (let i = 0; i < this._ancrsCollection.length; i++) {
@@ -355,6 +526,37 @@ class Vector {
         beg.next = end
         return new Vector(beg, end)
     }
+    get created() {
+        return typeof this.elem !== "undefined"
+    }
+    move(x, y) {
+        this._pnts.f.move(x,y)
+        this._pnts.s.move(x,y)
+        if (this.created) {
+            this.elem.translation.x += x
+            this.elem.translation.y += y
+        }
+        this.length
+    }
+    moveTo(p) {
+        let x = this.x,
+            y = this.y
+        this._pnts.f.moveTo(p)
+        this._pnts.s.moveTo(p)
+        this._pnts.s.move(x,y)
+        if (this.created) {
+            this.elem.translation.x = p.x
+            this.elem.translation.y = p.y
+        }
+        this.length
+    }
+    set fill(color) {
+        if (this.created) this.elem.fill = color
+    }
+    get fill() {
+        if (this.created) return this.elem.fill
+        return false
+    }
     clone(vec) {
         if (typeof vec._pnts !== "undefined") {
             this._pnts.f = new Dot().clone(vec._pnts.f)
@@ -377,7 +579,6 @@ class Vector {
     }
     createOn(ctx) {
         let pf = this.pf,
-            ps = this.ps,
             a1 = new Two.Anchor(0, 0, 0, 0, 0, 0, Two.Commands.move),
             a2 = new Two.Anchor(this.x * 2, this.y * 2, 0, 0, 0, 0, Two.Commands.close),
             anchors = [a1, a2]
@@ -389,9 +590,11 @@ class Vector {
         this.elem._collection[0].y = 0
         this.elem.linewidth = 3
         // this.elem.base = createCircAtP(p1, "blue", ctx)
-        this.elem.beg = createCircAtP(pf, "red", ctx)
-        this.elem.end = createCircAtP(ps, "yellow", ctx)
-        this.elemCollection = new Two.Utils.Collection(this.elem.base, this.elem.beg, this.elem.end, this.elem)
+        this.elem.beg = this._pnts.f.createOn(ctx)
+        this.elem.end = this._pnts.s.createOn(ctx)
+        this.elem.beg.fill = "red"
+        this.elem.end.fill = "yellow"
+        this.elemCollection = new Two.Utils.Collection(this.elem.beg, this.elem.end, this.elem)
         if (arguments.length < 2) return this.elem
         if (arguments[1].show == true) this.showOn(arguments[1].group)
         return this.elem
@@ -405,30 +608,21 @@ class Vector {
      */
     updateDot(num, pos) {
         let elem = this.elemCollection[num]
-        elem.translation.x = pos.x
-        elem.translation.y = pos.y
+        elem.moveTo(pos)
         switch (num) {
             case 0:
-                this.sysBeg = pos
-                break
-            case 1:
-                this.beg = pos
                 this.elem.translation.x = pos.x
                 this.elem.translation.y = pos.y
-                this.elem._collection[0].x = 0
-                this.elem._collection[0].y = 0
                 break
-            case 2:
-                this.end = pos
+            case 1:
                 this.elem._collection[1].x = this.x
-                this.elem._collection[1].y = -this.y
+                this.elem._collection[1].y = this.y
                 break
         }
     }
     update() {
-        this.updateDot(0, this._sysBeg)
-        this.updateDot(1, this.pf)
-        this.updateDot(2, this.ps)
+        this.updateDot(0, this.pf)
+        this.updateDot(1, this.ps)
     }
     removeFrom(group) {
         group.remove(this.elemCollection)

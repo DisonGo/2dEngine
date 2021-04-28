@@ -10,3 +10,6 @@ body{
     border-radius: 3px;
     max-width: 300px;
 }
+svg{
+    transform: rotateX(180deg);
+}
