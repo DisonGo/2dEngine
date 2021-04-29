@@ -7,6 +7,7 @@ let params = {
 }
 
 let cPos = new Dot(0, 0)
+cPos.lastP = new Dot(0, 0)
 cPos.checkPos = function (e) {
     let x, y
     // console.log(arguments);
@@ -17,6 +18,7 @@ cPos.checkPos = function (e) {
         x = e.clientX - arguments[1].getBoundingClientRect().x
         y = aHeight - e.clientY - arguments[1].getBoundingClientRect().y
     }
+    this.lastP = new Dot(this.x, this.y)
     this.x = x
     this.y = y
 }
@@ -314,18 +316,25 @@ svg.addEventListener("click", function (e) {
 })
 let draggerArr = []
 let randRadius = 100
-function checkDraggers(){
-    draggerArr.forEach(el=>{
-        if(el.mousedown) {
-            polys.forEach(poly=>{
-                if(el.parent != poly){
-                    if(!el.parent.SATCollision(poly))
-                    {
-                        el.parent.moveTo(cPos)
-                    }else {
-                        el.parent.moveTo(cPos.sumPoint(new Point(getRandom(-randRadius,randRadius),(getRandom(-randRadius,randRadius)))))
-                        el.mousedown = false
+
+function checkDraggers() {
+    draggerArr.forEach(el => {
+        if (el.mousedown) {
+            polys.forEach(poly => {
+                if (el.parent != poly) {
+                    el.parent.moveTo(cPos)
+                    if (el.parent.SATCollision(poly)) {
+                        el.fill = "red"
                     }
+                    else{
+                        el.fill = "green"
+                    }
+                    // } else {
+                    //     // el.parent.moveTo(cPos.sumPoint(new Point(getRandom(-randRadius, randRadius), (getRandom(-randRadius, randRadius)))))
+                    //     el.parent.moveTo(cPos.lastP)
+                    //     el.mousedown = false
+                    // }
+                    console.log(cPos,cPos.lastP);
                 }
             })
         }
@@ -363,30 +372,34 @@ let sides = 3
 
 let pnts1 = []
 let pnts2 = []
-// let x = getRandom(100, 1000)
-// let y = getRandom(200, 700)
 let inc = 150
-pnts1.push(new Dot(100, 100))
-pnts1.push(new Dot(200, 100))
-pnts1.push(new Dot(170, 180))
-pnts2.push(new Dot(inc-110, inc ).sumPoint(pnts1[0]))
-pnts2.push(new Dot(inc+50, inc).sumPoint(pnts1[1]))
-pnts2.push(new Dot(inc, inc+50).sumPoint(pnts1[2]))
+// pnts1.push(new Dot(100, 100))
+// pnts1.push(new Dot(200, 100))
+// pnts1.push(new Dot(170, 180))
+// pnts2.push(new Dot(inc - 110, inc).sumPoint(pnts1[0]))
+// pnts2.push(new Dot(inc + 50, inc).sumPoint(pnts1[1]))
+// pnts2.push(new Dot(inc, inc + 50).sumPoint(pnts1[2]))
 let center = new Point(aWidth, aHeight)
-let poly1 = new Polygon(pnts1, center)
-let poly2 = new Polygon(pnts2, center)
-    poly1.createOn(deTwo, {
-        show: true,
-        group: UI
-    })
-    poly2.createOn(deTwo, {
-        show: true,
-        group: UI
-    })
-draggerArr.push(poly1.setDrag(),poly2.setDrag()) 
-polys.push(poly1,poly2)
-console.log("Collision "+polys[0].SATCollision(polys[1])); 
+for (let i = 0; i < quan; i++) {
+    let pn
+    for (let i = 0; i < sides; i++) {
+        let x = getRandom(100, 1000)
+        let y = getRandom(200, 700)
+        let dot = new Dot(x, y)
+    }
+}
+let poly1 = new Polygon(pnts1)
+let poly2 = new Polygon(pnts2)
+poly1.createOn(deTwo, {
+    show: true,
+    group: UI
+})
+poly2.createOn(deTwo, {
+    show: true,
+    group: UI
+})
+draggerArr.push(poly1.setDrag(), poly2.setDrag())
+polys.push(poly1, poly2)
+console.log("Collision " + polys[0].SATCollision(polys[1]));
 log(poly1.calcBox())
-// for (let i = 0; i < quan; i++) {
-// }
 // console.log(poly.lines,poly.points);

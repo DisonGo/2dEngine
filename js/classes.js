@@ -146,8 +146,8 @@ class Line {
         this.ps.x += x
         this.ps.y += y
         if (this.created) {
-            this.elem.translation.x += x
-            this.elem.translation.y += y
+            this.elem._collection.x += x
+            this.elem._collection.y += y
         }
         this.length
     }
@@ -159,8 +159,10 @@ class Line {
         this.ps.x += dif.x
         this.ps.y += dif.y
         if (this.created) {
-            this.elem.translation.x = p.x
-            this.elem.translation.y = p.y
+            this.elem._collection[0].x = this.pf.x
+            this.elem._collection[0].y = this.pf.y
+            this.elem._collection[1].x = this.ps.x
+            this.elem._collection[1].y = this.ps.y
         }
         this.length
     }
@@ -172,10 +174,6 @@ class Line {
         return false
     }
     createOn(ctx) {
-        // let x1 = this.pf.x
-        //     let x2 = 
-        //     let y1 = 
-        //     let y2 = 
         this.elem = ctx.makeLine(this.pf.x, this.pf.y, this.ps.x, this.ps.y)
         this.elem.linewidth = 5
         this.elem.stroke = getRandCSSColor()
@@ -188,7 +186,7 @@ class Line {
     }
 }
 class Polygon {
-    constructor(pnts) {
+    constructor(pnts) { 
         this._ancrsCollection = []
         this._lineCollection = []
         this._vecArr = []
@@ -220,21 +218,23 @@ class Polygon {
         for (let el of this._ancrsCollection) {
             let v =new Vector(this.middle,el)
             this.middle._pVecs.push(v)
-            v.createOn(deTwo,{show:1,group:UI})
+            v.createOn(deTwo,{show:1,group:background})
         }
         for (let el of this._lineCollection) {
             let v =new Vector(this.middle,el.middle)
             this.middle._lVecs.push(v)
-            v.createOn(deTwo,{show:1,group:UI})
+            v.createOn(deTwo,{show:1,group:background})
         }
     }
-    setDrag(svg){
+    setDrag(){
         let poly = this
         this.middle.elem._renderer.elem.addEventListener("mousedown",function(){
             poly.middle.elem.mousedown = true
+            poly.middle.elem.fill = "gray"
         })
         this.middle.elem._renderer.elem.addEventListener("mouseup",function(){
             poly.middle.elem.mousedown = false
+            poly.middle.elem.fill = "white"
         })
         return poly.middle.elem
     }
@@ -256,7 +256,7 @@ class Polygon {
         })
         this._lineCollection.forEach((el ,i,arr)=> {
             let dot = new Dot()
-            el.move(x +this.middle._lVecs[i],y)
+            el.move(x ,y)
         })
         this._vecArr.forEach(el => {
             el.move(x,y)
@@ -269,21 +269,22 @@ class Polygon {
         })
     }
     moveTo(p){
+        let pm = this.middle
+        let dif = new Point().clone(p).substrPoint(pm)
         this.middle.moveTo(p)
-        // this.move(dif.x,dif.y)
         this._ancrsCollection.forEach((el,i) => {
             let vx = this.middle._pVecs[i].x
             let vy = this.middle._pVecs[i].y
             let dot = new Dot(p.x + vx,p.y + vy)
             this._vecArr[i].moveTo(dot)
-            this.middle._pVecs[i].moveTo(dot)    
+            this.middle._pVecs[i].moveTo(p)    
             el.moveTo(dot)
         })
         this._lineCollection.forEach((el,i)=> {
             let vx = this.middle._lVecs[i].x
             let vy = this.middle._lVecs[i].y
-            let dot = new Dot(p.x + vx,p.y + vy)
-            this.middle._lVecs[i].moveTo(dot)    
+            let dot = new Dot(p.x +vx,p.y+vy )
+            this.middle._lVecs[i].moveTo(p)    
             el.moveTo(dot)
         })
     }
